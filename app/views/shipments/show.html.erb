@@ -1,0 +1,54 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Origin:</strong>
+  <%= @shipment.origin %>
+</p>
+
+<p>
+  <strong>Destination:</strong>
+  <%= @shipment.destination %>
+</p>
+
+<p>
+  <strong>Price:</strong>
+  <%= @shipment.price %>
+</p>
+
+<p>
+  <strong>Sender mail:</strong>
+  <%= @shipment.sender_mail %>
+</p>
+
+<p>
+  <strong>Receiver mail:</strong>
+  <%= @shipment.receiver_mail %>
+</p>
+
+<p>
+  <strong>Cadet mail:</strong>
+  <%= @shipment.cadet_mail %>
+</p>
+
+<p>
+  <strong>Origin postal address:</strong>
+  <%= @shipment.origin_postal_address %>
+</p>
+
+<p>
+  <strong>Destination postal address:</strong>
+  <%= @shipment.destination_postal_address %>
+</p>
+
+<p>
+  <strong>Is price estimated:</strong>
+  <%= @shipment.is_price_estimated %>
+</p>
+
+<p>
+  <strong>State:</strong>
+  <%= @shipment.state %>
+</p>
+
+<%= link_to 'Edit', edit_shipment_path(@shipment) %> |
+<%= link_to 'Back', shipments_path %>

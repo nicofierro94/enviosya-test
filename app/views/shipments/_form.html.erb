@@ -1,0 +1,255 @@
+<%= form_with(model: shipment, local: true) do |form| %>
+  <% if shipment.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(shipment.errors.count, "error") %> prohibited this shipment from being saved:</h2>
+
+      <ul>
+      <% shipment.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field" style="visibility: hidden">
+    <%= form.label :origin %>
+    <%= form.text_field :origin, id: :shipment_origin %>
+  </div>
+
+  <div class="field" style="visibility: hidden">
+    <%= form.label :destination %>
+    <%= form.text_field :destination, id: :shipment_destination %>
+  </div>
+
+  <div class="field">
+    <%= form.label :price %>
+    <%= form.number_field :price, id: :shipment_price %>
+  </div>
+
+  <div class="field" style="visibility: hidden">
+    <%= form.label :sender_mail %>
+    <%= form.text_field :sender_mail, id: :shipment_sender_mail %>
+  </div>
+
+  <div class="field">
+    <%= form.label :receiver_mail %>
+    <%= form.text_field :receiver_mail, id: :shipment_receiver_mail %>
+  </div>
+
+  <div class="field">
+    <%= form.label :cadet_mail %>
+    <%= form.text_field :cadet_mail, id: :shipment_cadet_mail %>
+  </div>
+
+  <div class="field" style="visibility: hidden">
+    <%= form.label :origin_postal_address %>
+    <%= form.text_field :origin_postal_address, id: :shipment_origin_postal_address %>
+  </div>
+
+  <div class="field" style="visibility: hidden">
+    <%= form.label :destination_postal_address %>
+    <%= form.text_field :destination_postal_address, id: :shipment_destination_postal_address %>
+  </div>
+
+  <div class="field" style="visibility: hidden">
+    <%= form.label :is_price_estimated %>
+    <%= form.check_box :is_price_estimated, id: :shipment_is_price_estimated %>
+  </div>
+
+  <div class="field" style="visibility: hidden">
+    <%= form.label :state %>
+    <%= form.text_field :state, id: :shipment_state %>
+  </div>
+
+    <div id="googleMap" class="img-rounded" style="width:100%;height:380px">
+
+    </div>
+
+
+
+
+    <style>
+      #map {
+        height: 100%;
+      }
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+    <div style='width: 800px;'>
+      <div id="map" style='width: 800px; height: 400px;'></div>
+    </div>
+
+    <script>
+
+
+
+
+        var barrios = new Array();
+        var zonas = new Array();
+
+        var all = [];
+        var weightCost = 0;
+        var shipmentCost = 0;
+        receiverZones();
+
+
+
+        function initMap() {
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 12,
+                center: {lat: -34.8719237, lng: -56.14516},
+                mapTypeId: 'roadmap'
+            });
+
+            var markers = new Array();
+            var count = 0;
+
+            function setMapOnAll(map) {
+                for (var i = 0; i < markers.length; i++) {
+                    markers[i].setMap(map);
+                }
+            }
+
+            function clearMarkers() {
+                setMapOnAll(null);
+            }
+
+            function deleteMarkers() {
+                clearMarkers();
+                markers = [];
+            }
+
+            function addMarker(e){
+                marker = new google.maps.Marker({
+                    position: e.latLng,
+                    map: map,
+                    title: 'Hello World!'
+                });
+                markers.push(marker);
+            }
+
+
+
+
+
+
+            var id = "";
+
+            google.maps.event.addListener(map, 'click', function(e) {
+
+                for(var i = 0; i<70; i++){
+                    var pol = barrios[i];
+                    var tri = new google.maps.geometry.poly.containsLocation(e.latLng, pol);
+                    if(google.maps.geometry.poly.containsLocation(e.latLng, pol)){
+                        id = i;
+                    }
+                }
+
+                if(count<2){
+                    addMarker(e);
+                    zonas[count] = id;
+                    count++;
+                }
+                else{
+                    deleteMarkers();
+                    count = 0;
+                }
+            });
+
+
+        }
+
+        function receiverZones(data){
+            $.ajax({
+                url: "http://localhost:3004/shipments/cost",
+                type: "GET",
+                async: true,
+                success: function(data){
+                    debugger;
+                    all = data.area_info;
+                    weightCost = data.cost.cost;
+                    for(var a=0; a<70; a++){
+                        //var pol = all[a].polygon;
+                        var pol = transformPolygon(all[a].polygon);
+                        addPolygon(pol, map);
+                    }
+                },
+                error: function(data){
+                    //alert(data);
+                }
+            });
+        };
+
+        function addPolygon(ret, map){
+            var barrio = new google.maps.Polygon({
+                paths: ret,
+                strokeColor: '#FF0000',
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: '#FF0000',
+                fillOpacity: 0.35
+            });
+            barrios.push(barrio);
+            //barrio.setMap(map);
+        }
+
+
+
+
+
+
+
+
+        function transformPolygon(polygon){
+            var latlongitudes = polygon.split(",");
+            var newPolygon = new Array();
+            latlongitudes[0] = latlongitudes[0].replace("POLYGON ((", "");
+            latlongitudes[latlongitudes.length-1] = latlongitudes[latlongitudes.length-1].replace("))", "");
+            var latAndLng = latlongitudes[0].split(" ");
+            latAndLng[0] = latAndLng[0].replace(" ","");
+            var position = {lat: parseFloat(latAndLng[0]), lng: parseFloat(latAndLng[1])};
+            newPolygon.push(position);
+            for(var i = 1; i < latlongitudes.length-1; i++){
+                latAndLng = latlongitudes[i].split(" ");
+                latAndLng[1] = latAndLng[1].replace(" ","");
+                position = {lat: parseFloat(latAndLng[1]), lng: parseFloat(latAndLng[2])};
+                newPolygon.push(position);
+            }
+            latAndLng = latlongitudes[latlongitudes.length-1].split(" ");
+            latAndLng[0] = latAndLng[0].replace(" ","");
+            position = {lat: parseFloat(latAndLng[0]), lng: parseFloat(latAndLng[1])};
+            newPolygon.push(position);
+            return newPolygon;
+        }
+
+        function calculate(){
+            var kilos = $("#kilos").val();
+            if(zonas[0]===zonas[1]){
+                shipmentCost = kilos*weightCost;
+            }
+            else{
+                var des = all[zonas[1]].id;
+                shipmentCost = kilos*weightCost+all[zonas[0]].costToAreas[des];
+                //alert(all[zonas[0]].costToAreas[des]);
+                //document.getElementById("cost").innerHTML = all[zonas[0]].costToAreas[des];
+            }
+            $("#shipment_price").val(shipmentCost);
+        }
+
+
+    </script>
+
+    <script async defer
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB4im5Z72-jTkSnsRXEq08dWoy7Uxtwr_E&callback=initMap">
+    </script>
+    <label>Ingrese cantidad de kilos: </label> <input type="text" id="kilos">
+    <button onclick="calculate();">Calcular</button>
+
+    <div class="actions">
+      <%= form.submit %>
+    </div>
+
+<% end %>

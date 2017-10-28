@@ -1,0 +1,17 @@
+applications:
+- name: enviosyaFierroHarretche
+  buildpack: https://github.com/cloudfoundry/ruby-buildpack.git
+  command: rails server -p $PORT
+  disk_quota: 1G
+  instances: 1
+  memory: 256M
+
+  env:
+    DATABASE_URL: postgres://admin:KTGPPJSPWUIZYFFW@sl-us-south-1-portal.11.dblayer.com:25970/compose
+  routes:
+  - route: enviosyaFierroHarretche.mybluemix.net
+  services:
+  - enviosyaFierroHarretche-redis
+  - enviosyaFierroHarretche-db
+  stack: cflinuxfs2
+
